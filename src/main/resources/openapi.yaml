@@ -1,0 +1,116 @@
+openapi: 3.0.3
+info:
+  title: Customer Service API
+  version: 1.0.0
+  description: API for Bank Customers Management
+paths:
+  /customers:
+    get:
+      summary: Get all customers
+      operationId: findAll
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerResponse'
+    post:
+      summary: Create a customer
+      operationId: create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+  /customers/{id}:
+    get:
+      summary: Get customer by ID
+      operationId: findById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+    put:
+      summary: Update a customer
+      operationId: update
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+    delete:
+      summary: Delete a customer
+      operationId: delete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+components:
+  schemas:
+    CustomerRequest:
+      type: object
+      required:
+        - documentNumber
+        - name
+        - customerType
+      properties:
+        documentNumber:
+          type: string
+        name:
+          type: string
+        customerType:
+          type: string
+        profile:
+          type: string
+    CustomerResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        documentNumber:
+          type: string
+        name:
+          type: string
+        customerType:
+          type: string
+        profile:
+          type: string
