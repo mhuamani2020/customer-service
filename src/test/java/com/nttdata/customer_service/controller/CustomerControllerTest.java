@@ -3,6 +3,7 @@ package com.nttdata.customer_service.controller;
 import com.nttdata.customer_service.service.CustomerService;
 import com.nttdata.customerservice.dto.CustomerRequest;
 import com.nttdata.customerservice.dto.CustomerResponse;
+import com.nttdata.customer_service.config.TestSecurityConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
@@ -20,6 +22,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @WebFluxTest(controllers = CustomerController.class)
+@Import(TestSecurityConfig.class)
 class CustomerControllerTest {
 
     @Autowired

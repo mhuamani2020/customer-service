@@ -28,6 +28,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
 		</dependency>
+		<!-- Caché Redis reactiva: acelera el acceso a los datos maestros (catálogo de
+		     clientes) conforme al requerimiento de la Parte III. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
@@ -39,6 +45,16 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
+		<!-- Seguridad reactiva: resource server que valida los JWT emitidos por auth-service -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 
 		<!-- Lombok -->
@@ -53,6 +69,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -200,7 +221,8 @@
 				</executions>
 			</plugin>
 
-			<!-- Checkstyle en modo informativo -->
+			<!-- Checkstyle en modo informativo: se ejecuta en la fase validate pero no
+			     rompe el build con las reglas sun_checks (solo reporta violaciones). -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
@@ -209,12 +231,13 @@
 					<configLocation>sun_checks.xml</configLocation>
 					<consoleOutput>true</consoleOutput>
 					<failsOnError>false</failsOnError>
+					<failOnViolation>false</failOnViolation>
 					<linkXRef>false</linkXRef>
 				</configuration>
 				<executions>
 					<execution>
 						<id>validate</id>
-						<phase>none</phase>
+						<phase>validate</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
