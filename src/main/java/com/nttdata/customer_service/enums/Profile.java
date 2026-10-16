@@ -11,9 +11,15 @@ package com.nttdata.customer_service.enums;
  * @author NTT Data
  */
 public enum Profile {
-    /** Perfil de cliente de alto valor: solo persona natural (personal) con saldo mínimo promedio diario de S/ 30,000 en cuentas de ahorro. */
+    /**
+     * Perfil de cliente de alto valor: solo persona natural (personal) con saldo
+     * mínimo promedio diario de S/ 30,000 en cuentas de ahorro.
+     */
     VIP,
-    /** Perfil de pequeña y mediana empresa: persona natural o jurídico con al menos tres meses de antigüedad operativa. */
+    /**
+     * Perfil de pequeña y mediana empresa: persona natural o jurídico con al menos
+     * tres meses de antigüedad operativa.
+     */
     PYME,
     /** Perfil estándar, sin requisitos especiales de acceso. */
     STANDARD

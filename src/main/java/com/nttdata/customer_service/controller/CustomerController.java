@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -53,7 +53,8 @@ public class CustomerController implements CustomersApi {
      * @return mono con la respuesta HTTP 201 y el cliente creado
      */
     @Override
-    public Mono<ResponseEntity<CustomerResponse>> create(Mono<CustomerRequest> customerRequest, ServerWebExchange exchange) {
+    public Mono<ResponseEntity<CustomerResponse>> create(
+            Mono<CustomerRequest> customerRequest, ServerWebExchange exchange) {
         log.info("Contract-First: Creating new customer");
         return customerRequest
                 .flatMap(customerService::create)
@@ -84,7 +85,8 @@ public class CustomerController implements CustomersApi {
      * @return mono con la respuesta HTTP 200 y el cliente actualizado, o HTTP 404 si no existe
      */
     @Override
-    public Mono<ResponseEntity<CustomerResponse>> update(String id, Mono<CustomerRequest> customerRequest, ServerWebExchange exchange) {
+    public Mono<ResponseEntity<CustomerResponse>> update(
+            String id, Mono<CustomerRequest> customerRequest, ServerWebExchange exchange) {
         log.info("Contract-First: Updating customer by id {}", id);
         return customerRequest
                 .flatMap(request -> customerService.update(id, request))

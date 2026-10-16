@@ -87,7 +87,8 @@ public class CustomerServiceImpl implements CustomerService {
                     existingCustomer.setName(request.getName());
                     existingCustomer.setDocumentNumber(request.getDocumentNumber());
                     existingCustomer.setCustomerType(CustomerType.valueOf(request.getCustomerType().toUpperCase()));
-                    existingCustomer.setProfile(request.getProfile() != null ? Profile.valueOf(request.getProfile().toUpperCase()) : null);
+                    existingCustomer.setProfile(request.getProfile() != null
+                            ? Profile.valueOf(request.getProfile().toUpperCase()) : null);
 
                     return customerRepository.save(existingCustomer);
                 })
