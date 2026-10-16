@@ -1,5 +1,6 @@
 package com.nttdata.customer_service.service;
 
+import com.nttdata.customer_service.cache.CustomerCache;
 import com.nttdata.customer_service.enums.CustomerType;
 import com.nttdata.customer_service.enums.Profile;
 import com.nttdata.customer_service.model.Customer;
@@ -19,6 +20,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,6 +28,9 @@ class CustomerServiceImplTest {
 
     @Mock
     private CustomerRepository customerRepository;
+
+    @Mock
+    private CustomerCache customerCache;
 
     @InjectMocks
     private CustomerServiceImpl customerService;
@@ -48,6 +53,12 @@ class CustomerServiceImplTest {
         sampleRequest.setDocumentNumber("12345678");
         sampleRequest.setCustomerType("PERSONAL");
         sampleRequest.setProfile("VIP");
+
+        // La caché Redis (datos maestros) es best-effort: por defecto se comporta como
+        // "miss" y como escrituras/borrados exitosos para no acoplar los tests base.
+        lenient().when(customerCache.get(anyString())).thenReturn(Mono.empty());
+        lenient().when(customerCache.put(any(CustomerResponse.class))).thenReturn(Mono.empty());
+        lenient().when(customerCache.evict(anyString())).thenReturn(Mono.empty());
     }
 
     // --- FIND ALL & FIND BY ID ---
@@ -168,5 +179,54 @@ class CustomerServiceImplTest {
                 .verifyComplete();
 
         verify(customerRepository, times(1)).deleteById("cust-100");
+    }
+
+    // --- CACHÉ REDIS (DATOS MAESTROS, PARTE III) ---
+
+    @Test
+    @DisplayName("findById: Devuelve el cliente desde la caché Redis sin consultar MongoDB")
+    void findById_whenCacheHit_shouldReturnCachedCustomerAndSkipRepository() {
+        CustomerResponse cached = new CustomerResponse();
+        cached.setId("cust-100");
+        cached.setName("Juan Perez");
+        when(customerCache.get("cust-100")).thenReturn(Mono.just(cached));
+
+        Mono<CustomerResponse> result = customerService.findById("cust-100");
+
+        StepVerifier.create(result)
+                .expectNextMatches(res -> "cust-100".equals(res.getId())
+                        && "Juan Perez".equals(res.getName()))
+                .verifyComplete();
+
+        verify(customerRepository, never()).findById(anyString());
+    }
+
+    @Test
+    @DisplayName("findById: Ante un fallo de caché carga desde MongoDB y refresca la caché")
+    void findById_whenCacheMiss_shouldLoadFromRepositoryAndPopulateCache() {
+        when(customerCache.get("cust-100")).thenReturn(Mono.empty());
+        when(customerRepository.findById("cust-100")).thenReturn(Mono.just(sampleCustomer));
+
+        Mono<CustomerResponse> result = customerService.findById("cust-100");
+
+        StepVerifier.create(result)
+                .expectNextMatches(res -> "cust-100".equals(res.getId()))
+                .verifyComplete();
+
+        verify(customerRepository, times(1)).findById("cust-100");
+        verify(customerCache, times(1)).put(any(CustomerResponse.class));
+    }
+
+    @Test
+    @DisplayName("delete: Invalida la entrada del cliente en la caché Redis")
+    void delete_shouldEvictCacheEntry() {
+        when(customerRepository.deleteById("cust-100")).thenReturn(Mono.empty());
+
+        Mono<Void> result = customerService.delete("cust-100");
+
+        StepVerifier.create(result)
+                .verifyComplete();
+
+        verify(customerCache, times(1)).evict("cust-100");
     }
 }

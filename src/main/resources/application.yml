@@ -3,6 +3,21 @@ spring:
     name: customer-service
   config:
     import: "optional:configserver:http://localhost:8888"
+  # ========================================================================
+  # Redis (Parte III) — caché de datos maestros (catálogo de clientes)
+  # Acelera el acceso a los datos maestros que exponen los demás servicios.
+  # ========================================================================
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# Propiedades externalizadas (Parte I: "No deben tener configuraciones en el código")
+app:
+  cache:
+    # Tiempo de vida (segundos) de las entradas del catálogo de clientes en Redis.
+    customer-ttl-seconds: 300
+
 eureka:
   client:
     service-url:

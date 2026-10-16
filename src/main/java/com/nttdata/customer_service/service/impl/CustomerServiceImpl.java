@@ -1,5 +1,6 @@
 package com.nttdata.customer_service.service.impl;
 
+import com.nttdata.customer_service.cache.CustomerCache;
 import com.nttdata.customer_service.enums.CustomerType;
 import com.nttdata.customer_service.enums.Profile;
 import com.nttdata.customer_service.mapper.CustomerMapper;
@@ -26,6 +27,7 @@ import reactor.core.publisher.Mono;
 public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final CustomerCache customerCache;
 
     /**
      * Obtiene todos los clientes y los convierte a DTOs de respuesta.
@@ -40,14 +42,20 @@ public class CustomerServiceImpl implements CustomerService {
 
     /**
      * Busca un cliente por su identificador y lo convierte a DTO de respuesta.
+     * <p>
+     * Aplica el patrón <i>cache-aside</i> sobre Redis: primero consulta la caché
+     * del catálogo de clientes (datos maestros, Parte III) y, solo si no está,
+     * acude a MongoDB y refresca la caché.
      *
      * @param id identificador del cliente
      * @return mono con el cliente encontrado; vacío si no existe
      */
     @Override
     public Mono<CustomerResponse> findById(String id) {
-        return customerRepository.findById(id)
-                .map(CustomerMapper::toResponse);
+        return customerCache.get(id)
+                .switchIfEmpty(Mono.defer(() -> customerRepository.findById(id)
+                        .map(CustomerMapper::toResponse)
+                        .flatMap(response -> customerCache.put(response).thenReturn(response))));
     }
 
     /**
@@ -61,7 +69,8 @@ public class CustomerServiceImpl implements CustomerService {
         return Mono.just(request)
                 .map(CustomerMapper::toEntity)
                 .flatMap(customerRepository::save)
-                .map(CustomerMapper::toResponse);
+                .map(CustomerMapper::toResponse)
+                .flatMap(response -> customerCache.put(response).thenReturn(response));
     }
 
     /**
@@ -82,17 +91,20 @@ public class CustomerServiceImpl implements CustomerService {
 
                     return customerRepository.save(existingCustomer);
                 })
-                .map(CustomerMapper::toResponse);
+                .map(CustomerMapper::toResponse)
+                .flatMap(response -> customerCache.put(response).thenReturn(response));
     }
 
     /**
-     * Elimina definitivamente al cliente identificado.
+     * Elimina definitivamente al cliente identificado e invalida su entrada en la
+     * caché del catálogo de clientes.
      *
      * @param id identificador del cliente a eliminar
      * @return mono vacío que indica la finalización de la operación
      */
     @Override
     public Mono<Void> delete(String id) {
-        return customerRepository.deleteById(id);
+        return customerRepository.deleteById(id)
+                .then(customerCache.evict(id));
     }
 }
